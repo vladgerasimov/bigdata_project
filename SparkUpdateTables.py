@@ -1,5 +1,6 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.types import Row
+from pyspark.sql.types import StructType, StructField, IntegerType, LongType, StringType
+
 
 
 def update_df_link_vendor_code(data_to_update):
@@ -89,10 +90,15 @@ def update_df_prices_history(data_to_update):
                 .appName('yurkin_create_tables')\
                 .getOrCreate()
         
-        columns = ["vendor_code", "price", "datetime"]
-        data = [data_to_update]
+        # columns = ["vendor_code", "price", "datetime"]
+        schema = StructType([
+                        StructField("vendor_code", LongType(), True),
+                        StructField("price", LongType(), True),
+                        StructField("datetime", StringType(), True)
+                        ])
 
-        df = spark.createDataFrame(data, columns)
+        rdd = spark.sparkContext.parallelize(data_to_update)
+        df = spark.createDataFrame(rdd, schema)
 
         df.write.mode('append').parquet("hdfs:///user/andreyyur/project/df_prices_history.parquet")
 
