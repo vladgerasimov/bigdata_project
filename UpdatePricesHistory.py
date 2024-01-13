@@ -24,3 +24,4 @@ def update_and_parse_prices(links):
 
     spark.stop()
 
+
