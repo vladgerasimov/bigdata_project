@@ -9,10 +9,13 @@ def update_df_link_vendor_code(data_to_update):
                 .appName('yurkin_create_tables')\
                 .getOrCreate()
         
-        columns = ["link", "vendor_code", "goods_name"]
-        data = [data_to_update]
-
-        df = spark.createDataFrame(data, columns)
+        schema_df_link_vendor_code = StructType([
+                                        StructField("link", StringType(), True),
+                                        StructField("vendor_code", LongType(), True),
+                                        StructField("goods_name", StringType(), True)
+                                        ])
+        
+        df = spark.createDataFrame(data_to_update, schema=schema_df_link_vendor_code)
 
         df.write.mode('append').parquet("hdfs:///user/andreyyur/project/df_link_vendor_code.parquet")
 
@@ -24,12 +27,17 @@ def update_df_user_vendor_code(data_to_update):
                 .master("local[*]")\
                 .appName('yurkin_create_tables')\
                 .getOrCreate()
-        
-        columns = ["user_id", "vendor_code"]
-        data = [data_to_update]
 
-        df = spark.createDataFrame(data, columns)
+        print("------> spark alive")
+        schema_df_user_vendor_code = StructType([
+                                                StructField("user_id", LongType(), True),
+                                                StructField("vendor_code", LongType(), True),
+                                                StructField("discount_percent", IntegerType(), True)
+                                                ])
 
+        df = spark.createDataFrame(data_to_update, schema=schema_df_user_vendor_code)
+
+        print("------> df created")
         df.write.mode('append').parquet("hdfs:///user/andreyyur/project/df_user_vendor_code.parquet")
 
         spark.stop()
@@ -47,8 +55,8 @@ def check_df_user_vendor_code(data_to_check):
         query = f"""
                 SELECT COUNT(*) as count_check
                 FROM existing_df_view
-                WHERE user_id = {data_to_check[0]}
-                AND vendor_code = {data_to_check[1]}
+                WHERE user_id = {data_to_check[0][0]}
+                AND vendor_code = {data_to_check[0][1]}
                 """
         count_df = spark.sql(query)
 
@@ -71,9 +79,9 @@ def check_df_link_vendor_code(data_to_check):
         query = f"""
                 SELECT COUNT(*) as count_check
                 FROM existing_df_view
-                WHERE link = '{data_to_check[0]}'
-                AND vendor_code = {data_to_check[1]}
-                AND goods_name = '{data_to_check[2]}'
+                WHERE link = '{data_to_check[0][0]}'
+                AND vendor_code = {data_to_check[0][1]}
+                AND goods_name = '{data_to_check[0][2]}'
                 """
         count_df = spark.sql(query)
 
@@ -103,10 +111,3 @@ def update_df_prices_history(data_to_update):
         df.write.mode('append').parquet("hdfs:///user/andreyyur/project/df_prices_history.parquet")
 
         spark.stop()
-
-
-# data = ('https://goldapple.ru/19000162062-essentiels-week-end-visage-corps',
-#         19000162062,
-#         'PAYOT Essentiels week-end visage&corps')
-
-# print("Answer = > ", check_df_link_vendor_code(data_to_check = data))
