@@ -10,7 +10,7 @@ def update_df_link_vendor_code(data_to_update, spark):
             StructField("vendor_code", LongType(), True),
             StructField("goods_name", StringType(), True)
         ])
-        df = spark.createDataFrame(data_to_update, schema=schema_df_link_vendor_code)
+        df = spark.createDataFrame([data_to_update], schema=schema_df_link_vendor_code)
 
         df.write.mode('append').parquet("hdfs:///user/andreyyur/project/df_link_vendor_code.parquet")
 
@@ -21,7 +21,7 @@ def update_df_user_vendor_code(data_to_update, spark):
             StructField("vendor_code", LongType(), True),
             StructField("discount_percent", IntegerType(), True)
         ])
-        df = spark.createDataFrame(data_to_update, schema=schema_df_user_vendor_code)
+        df = spark.createDataFrame([data_to_update], schema=schema_df_user_vendor_code)
         print("------> df created")
         df.write.mode('append').parquet("hdfs:///user/andreyyur/project/df_user_vendor_code.parquet")
 
@@ -52,9 +52,9 @@ def check_df_link_vendor_code(data_to_check, spark):
         query = f"""
                 SELECT COUNT(*) as count_check
                 FROM existing_df_view
-                WHERE link = '{data_to_check[0][0]}'
-                AND vendor_code = {data_to_check[0][1]}
-                AND goods_name = '{data_to_check[0][2]}'
+                WHERE link = '{data_to_check[0]}'
+                AND vendor_code = '{data_to_check[1]}'
+                AND goods_name = '{data_to_check[2]}'
                 """
         count_df = spark.sql(query)
 
@@ -71,7 +71,7 @@ def update_df_prices_history(data_to_update, spark):
                         StructField("datetime", StringType(), True)
                         ])
 
-        rdd = spark.sparkContext.parallelize(data_to_update)
+        rdd = spark.sparkContext.parallelize([data_to_update])
         df = spark.createDataFrame(rdd, schema)
 
         df.write.mode('append').parquet("hdfs:///user/andreyyur/project/df_prices_history.parquet")

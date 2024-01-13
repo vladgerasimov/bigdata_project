@@ -8,7 +8,7 @@ from SparkUpdateTables import update_df_user_vendor_code, update_df_link_vendor_
 from SparkUpdateTables import check_df_user_vendor_code, check_df_link_vendor_code
 
 
-with open("project/secrets/bot_secrets.json", 'r') as f:
+with open("secrets/bot_secrets.json", 'r') as f:
     bot_secret = json.load(f)['token']
 
 bot = telebot.TeleBot(bot_secret)
@@ -34,6 +34,8 @@ def get_link(message):
         user_id = message.from_user.id
         user_vendor_code_update = (user_id, vendor_code)
         link_vendor_code_update = (link, vendor_code, goods_name)
+        print(f"{user_vendor_code_update=}")
+        print(f"{link_vendor_code_update=}")
         bot.send_message(
             message.chat.id,
             "Введите процент скидки, при котором нам оповестить вас. Например, 25. "
