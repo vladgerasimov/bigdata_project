@@ -60,7 +60,6 @@ def update_and_parse_prices(links):
         res_to_update.append(res)
 
     update_df_prices_history(res_to_update, spark)
-    
 
     spark.stop()
 

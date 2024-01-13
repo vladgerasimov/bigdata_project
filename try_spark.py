@@ -6,9 +6,10 @@ spark = SparkSession.builder\
                 .getOrCreate()
 
 
-hdfs_path = "hdfs:///user/andreyyur/project/df_prices_history.parquet"
+# hdfs_path = "hdfs:///user/andreyyur/project/df_prices_history.parquet"
 print("spark жив")
-# hdfs_path = "hdfs:///user/andreyyur/project/df_link_vendor_code.parquet"
+hdfs_path = "hdfs:///user/andreyyur/project/df_link_vendor_code.parquet"
+# hdfs_path = "hdfs:///user/andreyyur/project/df_user_vendor_code.parquet"
 
 
 df = spark.read.parquet(hdfs_path).toPandas()

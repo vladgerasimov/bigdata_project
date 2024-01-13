@@ -1,39 +1,31 @@
+from PageInfo import get_page_info
 from pyspark.sql import SparkSession
-from SparkUpdateTables import update_df_prices_history
-import requests
-from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
+from pyspark.sql.types import StructType, StructField, IntegerType, LongType
 
+link = 'https://goldapple.ru/19000215146-jardin-enchante'
+info_link = get_page_info(link)
+
+vendor_code = int(info_link[0])
+goods_name = str(info_link[1])
+user_id = 270131364
+
+user_vendor_code_update = [[user_id, vendor_code, 1]]  # 1 нужно будет заменить на число от пользователя
 
 spark = SparkSession.builder\
-                    .master("local[*]")\
-                    .appName('yurkin_create_tables')\
-                    .getOrCreate()
+                .master("local[*]")\
+                .appName('yurkin_create_tables')\
+                .getOrCreate()
 
-print('start ss')
-links = 'hdfs:///user/andreyyur/project/df_link_vendor_code.parquet'
-res_to_update = []
-df = spark.read.parquet(links).toPandas()
+print("------> spark alive")
+schema_df_user_vendor_code = StructType([
+    StructField("user_id", LongType(), True),
+    StructField("vendor_code", LongType(), True),
+    StructField("discount_percent", IntegerType(), True)
+])
 
-print('start cycle')
-for l in list(df.link):
-    # print(l)
+df = spark.createDataFrame(user_vendor_code_update, schema=schema_df_user_vendor_code)
 
-    page = requests.get(l)
-    soup = BeautifulSoup(page.text, "html.parser")
+print("------> df created")
+df.write.mode('append').parquet("hdfs:///user/andreyyur/project/df_user_vendor_code.parquet")
 
-    raw_price = soup.find('div', class_='fMDws sRt8j')
-    # print('raw_priceraw_price', raw_price)
-    price = int(raw_price.contents[0].strip().replace(' ', ''))
-
-    raw_code = soup.find('div', class_='ul6Oh')
-    code = int(raw_code.contents[0].strip())
-
-    current_datetime = datetime.now()+timedelta(hours=3)
-
-    res = tuple([code, price, current_datetime.strftime("%Y-%m-%d %H:%M:%S")])
-    res_to_update.append(res)
-
-# print(res_to_update)
-print("got_result of parsing")
-update_df_prices_history(res_to_update)
+spark.stop()
