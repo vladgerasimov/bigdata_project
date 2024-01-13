@@ -19,7 +19,7 @@ def update_and_parse_prices(links):
         res = (get_page_info(l))
         res = [res[0], res[2], res[3]]
 
-        update_df_prices_history(res)
+        update_df_prices_history(res, spark=spark)
     
 
     spark.stop()
