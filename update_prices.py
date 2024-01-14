@@ -57,12 +57,23 @@ def get_items_for_users(spark) -> dict[int, list[str]]:
     ).filter(
         F.col("price_diff_percent") <= -F.col("discount_percent")
     )
-    print(df.show())
 
     df = df.select("user_id", "goods_name").toPandas()
     grouped_df = df.groupby("user_id")["goods_name"].unique()
     result = {user: cheap_items.tolist() for user, cheap_items in grouped_df.items()}
     return result
+
+
+
+def notify_user(user_id, items: list[str]):
+    items_message = '\n•'.join(items)
+    message = f"Пора за покупками!\nПроизошло снижение цен на интересующие вас товары:\n{items_message}"
+
+    params = {
+        'chat_id': user_id,
+        'text': message,
+    }
+    requests.post(app_settings.api_url, params=params)
 
 
 def update_and_parse_prices(links):
@@ -88,21 +99,10 @@ def update_and_parse_prices(links):
     update_df_prices_history(res_to_update, spark)
 
     users_to_notify = get_items_for_users(spark)
-    print(users_to_notify)
+    print(f"{users_to_notify=}")
     for user_id, items in users_to_notify.items():
         notify_user(user_id, items)
 
     spark.stop()
 
 update_and_parse_prices(app_settings.link_vendor_code_table)
-
-
-def notify_user(user_id, items: list[str]):
-    items_message = '\n•'.join(items)
-    message = f"Пора за покупками!\nПроизошло снижение цен на интересующие вас товары:\n{items_message}"
-
-    params = {
-        'chat_id': user_id,
-        'text': message,
-    }
-    requests.post(app_settings.api_url, params=params)
