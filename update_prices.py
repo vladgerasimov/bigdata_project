@@ -58,7 +58,7 @@ def update_and_parse_prices(links):
         try:
             res = get_page_info(l)
         except:
-            pass
+            continue
         res = [res[0], res[2], res[3]]
 
         res_to_update.append(res)
