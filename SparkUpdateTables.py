@@ -47,31 +47,27 @@ def check_df_user_vendor_code(data_to_check, spark) -> int:
 
 def check_df_link_vendor_code(data_to_check, spark):
         existing_df = spark.read.parquet("hdfs:///user/andreyyur/project/df_link_vendor_code.parquet")
-        existing_df.createOrReplaceTempView("existing_df_view")
+        link, vendor_code, goods_name = data_to_check
 
-        query = f"""
-                SELECT COUNT(*) as count_check
-                FROM existing_df_view
-                WHERE link = '{data_to_check[0]}'
-                AND vendor_code = '{data_to_check[1]}'
-                AND goods_name = '{data_to_check[2]}'
-                """
-        count_df = spark.sql(query)
+        rows_count = (
+            existing_df
+            .filter(
+                (F.col("link") == F.lit(link))
+                & (F.col("vendor_code") == F.lit(vendor_code))
+                & (F.col("goods_name") == F.lit(goods_name))
+            ).count()
+        )
 
-        count_value = count_df.first().asDict()["count_check"]
-
-        return count_value
+        return rows_count
 
 
 def update_df_prices_history(data_to_update, spark):
-        # columns = ["vendor_code", "price", "datetime"]
         schema = StructType([
-                        StructField("vendor_code", LongType(), True),
-                        StructField("price", LongType(), True),
-                        StructField("datetime", StringType(), True)
-                        ])
+            StructField("vendor_code", LongType(), True),
+            StructField("price", LongType(), True),
+            StructField("datetime", StringType(), True)
+        ])
 
-        rdd = spark.sparkContext.parallelize([data_to_update])
-        df = spark.createDataFrame(rdd, schema)
+        df = spark.createDataFrame([data_to_update], schema=schema)
 
         df.write.mode('append').parquet("hdfs:///user/andreyyur/project/df_prices_history.parquet")
