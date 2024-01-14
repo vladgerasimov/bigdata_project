@@ -16,14 +16,16 @@ if not plots_dir.exists():
 
 def get_price_changes(spark: SparkSession):
     df = spark.read.parquet(app_settings.prices_history_table)
-    lag_window = Window().partitionBy("vendor_code").orderBy("datetime")
+    window = Window().partitionBy("vendor_code")
+    lag_window = window.orderBy("datetime")
+
     df = df.withColumn(
         "price_diff_percent",
         (F.lag(F.col("price"), 1).over(lag_window) / F.col("price") - 1) * 100
     )
     return df.withColumn(
         "last_datetime",
-        F.last("datetime").over(lag_window)
+        F.max("datetime").over(window)
     ).filter(
         F.col("datetime") == F.col("last_datetime")
     ).select("vendor_code", "price_diff_percent")
