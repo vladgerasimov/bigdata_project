@@ -34,19 +34,16 @@ def get_link(message):
         user_id = message.from_user.id
         user_vendor_code_update = (user_id, vendor_code)
         link_vendor_code_update = (link, vendor_code, goods_name)
-        print(f"{user_vendor_code_update=}")
-        print(f"{link_vendor_code_update=}")
         bot.send_message(
             message.chat.id,
             "Введите процент скидки, при котором нам оповестить вас. Например, 25. "
             "Если не хотите получать оповещения, введите -"
         )
-
+        bot.register_next_step_handler_by_chat_id(message.chat.id, get_min_discount, user_vendor_code_update=user_vendor_code_update)
         if check_df_link_vendor_code(link_vendor_code_update, spark=spark) < 1:
             print("--------> check link_vendor ok")
             update_df_link_vendor_code(link_vendor_code_update, spark=spark)
             print("--------> update link_vendor ok")
-        bot.register_next_step_handler_by_chat_id(message.chat.id, get_min_discount, user_vendor_code_update=user_vendor_code_update)
     else:
         bot.send_message(message.chat.id, "Это не похоже на ссылку ЗЯ (((")
 
