@@ -44,9 +44,11 @@ def save_prices_plot(prices_history: dict[str, int], item_name: str) -> Path:
 
     fig, ax = plt.subplots()
     ax.plot(datetimes, prices)
-    ax.title(item_name)
-    ax.xlabel("datetime")
-    ax.ylabel("price, rubles")
+    ax.set(
+        title=item_name,
+        xlabel='datetime',
+        ylabel='price, rubles',
+    )
     file_name = plots_dir / f"prices_plot_{datetime.now()}.jpeg"
     fig.savefig(file_name)
     return file_name
