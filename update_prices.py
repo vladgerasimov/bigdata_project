@@ -1,8 +1,12 @@
+import pyspark.sql.functions as F
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, LongType, StringType
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
+
+from analytics.prices import get_price_changes
+from core.settings import app_settings
 
 
 def get_page_info(url:str):
@@ -35,7 +39,7 @@ def update_df_prices_history(data_to_update, spark):
         rdd = spark.sparkContext.parallelize(data_to_update)
         df = spark.createDataFrame(rdd, schema)
 
-        df.write.mode('append').parquet("hdfs:///user/andreyyur/project/df_prices_history.parquet")
+        df.write.mode("append").parquet(app_settings.prices_history_table)
 
 
 
@@ -61,6 +65,45 @@ def update_and_parse_prices(links):
 
     update_df_prices_history(res_to_update, spark)
 
+    users_to_notify = get_items_for_users(spark)
+    print(users_to_notify)
+    for user_id, items in users_to_notify.items():
+        notify_user(user_id, items)
+
     spark.stop()
 
-update_and_parse_prices("hdfs:///user/andreyyur/project/df_link_vendor_code.parquet")
+update_and_parse_prices(app_settings.link_vendor_code_table)
+
+
+def notify_user(user_id, items: list[str]):
+    items_message = '\n•'.join(items)
+    message = f"Пора за покупками!\nПроизошло снижение цен на интересующие вас товары:\n{items_message}"
+
+    params = {
+        'chat_id': user_id,
+        'text': message,
+    }
+    requests.post(app_settings.api_url, params=params)
+
+
+def get_items_for_users(spark) -> dict[int, list[str]]:
+    price_changes = get_price_changes(spark)
+    users = spark.read.parquet(app_settings.user_vendor_code_table)
+    items = spark.read.parquet(app_settings.link_vendor_code_table)
+    df = price_changes.join(
+        users,
+        on="vendor_code",
+        how="inner"
+    ).join(
+        items,
+        on="vendor_code",
+        how="inner"
+    ).filter(
+        F.col("price_diff_percent") <= -F.col("discount_percent")
+    )
+    print(df.show())
+
+    df = df.select("user_id", "goods_name").toPandas()
+    grouped_df = df.groupby("user_id")["goods_name"].unique()
+    result = {user: cheap_items.tolist() for user, cheap_items in grouped_df.items()}
+    return result
