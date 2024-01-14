@@ -7,7 +7,7 @@ from pyspark.sql import SparkSession
 
 from SparkUpdateTables import update_df_user_vendor_code, update_df_link_vendor_code
 from SparkUpdateTables import check_df_user_vendor_code, check_df_link_vendor_code
-from analytics.prices import get_vendor_code_by_link, get_price_history, save_prices_plot
+from analytics.prices import get_vendor_data_by_link, get_price_history, save_prices_plot
 
 with open("secrets/bot_secrets.json", 'r') as f:
     bot_secret = json.load(f)['token']
@@ -100,7 +100,8 @@ def plot_prices(message):
 def plot_prices_callback(message):
     user_id = message.from_user.id
     link = re.findall(pattern, message.text)[0]
-    vendor_code = get_vendor_code_by_link(link, spark)
+    vendor_data = get_vendor_data_by_link(link, spark)
+    vendor_code, item_name = vendor_data.vendor_code, vendor_data.name
     if not vendor_code:
         bot.send_message(user_id, "У нас нет данных о цене этого товара☹️")
     else:
@@ -108,7 +109,7 @@ def plot_prices_callback(message):
         if not price_history:
             bot.send_message(user_id, "У нас нет данных о цене этого товара☹️")
         else:
-            plot_path = save_prices_plot(price_history)
+            plot_path = save_prices_plot(price_history, item_name)
             with open(plot_path, "rb") as image:
                 bot.send_photo(user_id, image)
             plot_path.unlink()

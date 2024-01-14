@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
@@ -37,11 +38,12 @@ def get_price_history(vendor_code: int, spark: SparkSession) -> dict[str, int]:
     return {row.datetime: row.price for row in rows} if rows else {}
 
 
-def save_prices_plot(prices_history: dict[str, int]) -> Path:
+def save_prices_plot(prices_history: dict[str, int], item_name: str) -> Path:
     datetimes = prices_history.keys()
     prices = prices_history.values()
 
     plt.plot(datetimes, prices)
+    plt.title(item_name)
     plt.xlabel("datetime")
     plt.ylabel("price, rubles")
     file_name = plots_dir / f"prices_plot_{datetime.now()}.jpeg"
@@ -49,10 +51,16 @@ def save_prices_plot(prices_history: dict[str, int]) -> Path:
     return file_name
 
 
-def get_vendor_code_by_link(link: str, spark: SparkSession) -> int | None:
+@dataclass
+class VendorData:
+    vendor_code: int
+    name: str
+
+
+def get_vendor_data_by_link(link: str, spark: SparkSession) -> VendorData | None:
     df = spark.read.parquet(app_settings.link_vendor_code_table)
     rows = df.filter(
         F.col("link") == F.lit(link)
-    ).select("vendor_code").collect()
+    ).select("vendor_code", "goods_name").collect()
 
-    return rows[0].vendor_code if rows else None
+    return VendorData(vendor_code=rows[0].vendor_code, name=rows[0].goods_name) if rows else None
