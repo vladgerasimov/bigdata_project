@@ -42,6 +42,28 @@ def update_df_prices_history(data_to_update, spark):
         df.write.mode("append").parquet(app_settings.prices_history_table)
 
 
+def get_items_for_users(spark) -> dict[int, list[str]]:
+    price_changes = get_price_changes(spark)
+    users = spark.read.parquet(app_settings.user_vendor_code_table)
+    items = spark.read.parquet(app_settings.link_vendor_code_table)
+    df = price_changes.join(
+        users,
+        on="vendor_code",
+        how="inner"
+    ).join(
+        items,
+        on="vendor_code",
+        how="inner"
+    ).filter(
+        F.col("price_diff_percent") <= -F.col("discount_percent")
+    )
+    print(df.show())
+
+    df = df.select("user_id", "goods_name").toPandas()
+    grouped_df = df.groupby("user_id")["goods_name"].unique()
+    result = {user: cheap_items.tolist() for user, cheap_items in grouped_df.items()}
+    return result
+
 
 def update_and_parse_prices(links):
     print('update_and_parse_prices')
@@ -84,26 +106,3 @@ def notify_user(user_id, items: list[str]):
         'text': message,
     }
     requests.post(app_settings.api_url, params=params)
-
-
-def get_items_for_users(spark) -> dict[int, list[str]]:
-    price_changes = get_price_changes(spark)
-    users = spark.read.parquet(app_settings.user_vendor_code_table)
-    items = spark.read.parquet(app_settings.link_vendor_code_table)
-    df = price_changes.join(
-        users,
-        on="vendor_code",
-        how="inner"
-    ).join(
-        items,
-        on="vendor_code",
-        how="inner"
-    ).filter(
-        F.col("price_diff_percent") <= -F.col("discount_percent")
-    )
-    print(df.show())
-
-    df = df.select("user_id", "goods_name").toPandas()
-    grouped_df = df.groupby("user_id")["goods_name"].unique()
-    result = {user: cheap_items.tolist() for user, cheap_items in grouped_df.items()}
-    return result
