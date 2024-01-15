@@ -2,6 +2,8 @@ import pyspark.sql.functions as F
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, IntegerType, LongType, StringType
 
+from core.settings import app_settings
+
 
 
 def update_df_link_vendor_code(data_to_update, spark):
@@ -12,7 +14,7 @@ def update_df_link_vendor_code(data_to_update, spark):
         ])
         df = spark.createDataFrame([data_to_update], schema=schema_df_link_vendor_code)
 
-        df.write.mode('append').parquet("hdfs:///user/andreyyur/project/df_link_vendor_code.parquet")
+        df.write.mode('append').parquet(app_settings.link_vendor_code_table)
 
 
 def update_df_user_vendor_code(data_to_update, spark):
@@ -23,7 +25,7 @@ def update_df_user_vendor_code(data_to_update, spark):
         ])
         df = spark.createDataFrame([data_to_update], schema=schema_df_user_vendor_code)
         print("------> df created")
-        df.write.mode('append').parquet("hdfs:///user/andreyyur/project/df_user_vendor_code.parquet")
+        df.write.mode('append').parquet(app_settings.user_vendor_code_table)
 
 
 def check_df_user_vendor_code(data_to_check, spark) -> int:
@@ -46,7 +48,7 @@ def check_df_user_vendor_code(data_to_check, spark) -> int:
         return rows_count
 
 def check_df_link_vendor_code(data_to_check, spark):
-        existing_df = spark.read.parquet("hdfs:///user/andreyyur/project/df_link_vendor_code.parquet")
+        existing_df = spark.read.parquet(app_settings.link_vendor_code_table)
         link, vendor_code, goods_name = data_to_check
 
         rows_count = (
@@ -70,4 +72,4 @@ def update_df_prices_history(data_to_update, spark):
 
         df = spark.createDataFrame([data_to_update], schema=schema)
 
-        df.write.mode('append').parquet("hdfs:///user/andreyyur/project/df_prices_history.parquet")
+        df.write.mode('append').parquet(app_settings.prices_history_table)
