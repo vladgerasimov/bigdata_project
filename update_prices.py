@@ -51,7 +51,7 @@ class ItemData:
     link: str
 
     def __str__(self):
-        return f"![{self.goods_name}]({self.link})"
+        return f"[{self.goods_name}]({self.link})"
 
 
 def get_user_followed_items(grouped_df: pd.DataFrame):
@@ -83,7 +83,7 @@ def get_items_for_users(spark) -> dict[int, list[str]]:
 
 def notify_user(user_id, items: list[str]):
     items_message = '\n•'.join(map(str, items))
-    message = f"Пора за покупками!\nПроизошло снижение цен на интересующие вас товары:\n•{items_message}"
+    message = f"Пора за покупками\!\nПроизошло снижение цен на интересующие вас товары:\n•{items_message}"
 
     params = {
         'chat_id': user_id,
