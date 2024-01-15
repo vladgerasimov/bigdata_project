@@ -55,7 +55,7 @@ class ItemData:
 
 
 def get_user_followed_items(grouped_df: pd.DataFrame):
-    return [ItemData(**row) for row in grouped_df.to_dict(orient="records")]
+    return [ItemData(**row) for row in grouped_df.drop_duplicates().to_dict(orient="records")]
 
 
 def get_items_for_users(spark) -> dict[int, list[str]]:
