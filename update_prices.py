@@ -76,7 +76,7 @@ def get_items_for_users(spark) -> dict[int, list[str]]:
 
     df = df.select("user_id", "goods_name", "link").toPandas()
     grouped_dfs = df.groupby("user_id")[["goods_name", "link"]]
-    result = {user: get_user_followed_items(grouped_df) for user, grouped_df in grouped_dfs.items()}
+    result = {user: get_user_followed_items(grouped_df) for user, grouped_df in grouped_dfs}
     return result
 
 
