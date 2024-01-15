@@ -82,7 +82,7 @@ def get_items_for_users(spark) -> dict[int, list[str]]:
 
 
 def notify_user(user_id, items: list[str]):
-    items_message = '\n•'.join(items)
+    items_message = '\n•'.join(map(str, items))
     message = f"Пора за покупками!\nПроизошло снижение цен на интересующие вас товары:\n•{items_message}"
 
     params = {
