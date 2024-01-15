@@ -121,4 +121,5 @@ def update_and_parse_prices(links):
 
     spark.stop()
 
-update_and_parse_prices(app_settings.link_vendor_code_table)
+if __name__ == '__main__':
+    update_and_parse_prices(app_settings.link_vendor_code_table)
