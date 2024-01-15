@@ -80,7 +80,6 @@ def get_min_discount(message, user_vendor_code_update: tuple):
             bot.send_message(
                 user_id,
                 "Спасибо! Теперь я знаю, что вам интересно отслеживать. "
-                "Чтобы узнать последнюю запись о товаре воспользуйтесь кнопкой /???"
             )
     else:
         bot.send_message(
