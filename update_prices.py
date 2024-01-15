@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+
+import pandas as pd
 import pyspark.sql.functions as F
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, LongType, StringType
@@ -42,6 +45,19 @@ def update_df_prices_history(data_to_update, spark):
         df.write.mode("append").parquet(app_settings.prices_history_table)
 
 
+@dataclass
+class ItemData:
+    goods_name: str
+    link: str
+
+    def __str__(self):
+        return f"![{self.goods_name}]({self.link})"
+
+
+def get_user_followed_items(grouped_df: pd.DataFrame):
+    return [ItemData(**row) for row in grouped_df.as_dict(orient="records")]
+
+
 def get_items_for_users(spark) -> dict[int, list[str]]:
     price_changes = get_price_changes(spark)
     users = spark.read.parquet(app_settings.user_vendor_code_table)
@@ -58,20 +74,21 @@ def get_items_for_users(spark) -> dict[int, list[str]]:
         F.col("price_diff_percent") <= -F.col("discount_percent")
     )
 
-    df = df.select("user_id", "goods_name").toPandas()
-    grouped_df = df.groupby("user_id")["goods_name"].unique()
-    result = {user: cheap_items.tolist() for user, cheap_items in grouped_df.items()}
+    df = df.select("user_id", "goods_name", "link").toPandas()
+    grouped_dfs = df.groupby("user_id")[["goods_name", "link"]]
+    result = {user: get_user_followed_items(grouped_df) for user, grouped_df in grouped_dfs.items()}
     return result
 
 
 
 def notify_user(user_id, items: list[str]):
     items_message = '\n•'.join(items)
-    message = f"Пора за покупками!\nПроизошло снижение цен на интересующие вас товары:\n{items_message}"
+    message = f"Пора за покупками!\nПроизошло снижение цен на интересующие вас товары:\n•{items_message}"
 
     params = {
         'chat_id': user_id,
         'text': message,
+        'parse_mode': "MarkdownV2"
     }
     requests.post(app_settings.api_url, params=params)
 
@@ -83,7 +100,6 @@ def update_and_parse_prices(links):
                     .appName('yurkin_create_tables')\
                     .getOrCreate()
 
-    # hdfs_path = "hdfs:///user/andreyyur/project/df_link_vendor_code.parquet"
     df = spark.read.parquet(links).toPandas()
     res_to_update = []
 
