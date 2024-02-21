@@ -12,11 +12,11 @@ Pyspark приложение 4 раза в день выгружает цены 
 * Telebot
 
 ### Примеры
-Добавление товара:
-<img src="images/add_item.png" alt="add_item" width="200"/>
+Добавление товара:  
+<img src="images/add_item.png" alt="add_item" width="400"/>
 
-Отображение графика цен:
-<img src="images/prices_plot.png" alt="prices_plot" width="150"/>
+Отображение графика цен:  
+<img src="images/prices_plot.png" alt="prices_plot" width="300"/>
 
-Оповещение о снижении цены:
-<img src="images/notification.png" alt="notification" width="150"/>
+Оповещение о снижении цены:  
+<img src="images/notification.png" alt="notification" width="300"/>
