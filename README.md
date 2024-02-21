@@ -13,10 +13,10 @@ Pyspark приложение 4 раза в день выгружает цены 
 
 ### Примеры
 Добавление товара:  
-<img src="images/add_item.png" alt="add_item" width="400"/>
+<img src="images/add_item.png" alt="add_item" width="500"/>
 
 Отображение графика цен:  
-<img src="images/prices_plot.png" alt="prices_plot" width="300"/>
+<img src="images/prices_plot.png" alt="prices_plot" width="400"/>
 
 Оповещение о снижении цены:  
-<img src="images/notification.png" alt="notification" width="300"/>
+<img src="images/notification.png" alt="notification" width="400"/>
